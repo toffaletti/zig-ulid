@@ -1,0 +1,3 @@
+[submodule "base32"]
+	path = base32
+	url = https://github.com/toffaletti/base32.git
