@@ -8,12 +8,12 @@ pub const ULID = struct {
 
     data: [16]u8 = [_]u8{0} ** 16,
 
-    pub fn random(rand: *std.rand.Random) ULID {
+    pub fn random(rand: std.rand.Random) ULID {
         // Get a calendar timestamp, in milliseconds, relative to UTC 1970-01-01.
         return randomWithTimestamp(rand, std.time.milliTimestamp());
     }
 
-    pub fn randomWithTimestamp(rand: *std.rand.Random, unixTimestamp: i64) ULID {
+    pub fn randomWithTimestamp(rand: std.rand.Random, unixTimestamp: i64) ULID {
         var n = ULID{};
         rand.bytes(n.data[6..]);
         const ts = @intCast(u48, unixTimestamp);
@@ -53,6 +53,8 @@ pub fn formatULID(
     options: std.fmt.FormatOptions,
     writer: anytype,
 ) !void {
+    _ = options;
+    _ = fmt;
     var buf: [26]u8 = undefined;
     _ = ulid.format(&buf);
     try writer.writeAll(&buf);
@@ -87,7 +89,7 @@ test "parse" {
     const max = try ULID.parse("ZZZZZZZZZZZZZZZZZZZZZZZZZZ");
     try t.expectEqual(@as(i64, 281474976710655), max.timestamp());
     //std.debug.print("payload[{s}]\n", .{std.fmt.fmtSliceHexUpper(max.payload())});
-    try t.expectEqualSlices(u8, &[_]u8{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00}, max.payload());
+    try t.expectEqualSlices(u8, &[_]u8{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00 }, max.payload());
 }
 
 test "formatter" {
@@ -100,10 +102,10 @@ test "formatter" {
 test "random" {
     const seed_time = 1469918176385;
     var prng = std.rand.DefaultPrng.init(0);
-    const a = ULID.randomWithTimestamp(&prng.random, seed_time);
-    var fmtbuf: [26]u8 = undefined;
+    const a = ULID.randomWithTimestamp(prng.random(), seed_time);
     try t.expectEqual(@as(i64, seed_time), a.timestamp());
     var buf: [16]u8 = undefined;
-    const expected = try std.fmt.hexToBytes(&buf, "A333D71CA4469950FA4B");
+    const expected = try std.fmt.hexToBytes(&buf, "DF230B49615D175307D5");
+    //std.debug.print("payload[{s}]\n", .{std.fmt.fmtSliceHexUpper(a.payload())});
     try t.expectEqualSlices(u8, expected, a.payload());
 }
