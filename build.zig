@@ -6,14 +6,18 @@ pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
 
     const lib = b.addStaticLibrary("zig-ulid", "src/ulid.zig");
-    lib.addPackage(.{ .name = "base32", .path = "base32/src/base32.zig" });
+    const pkg_base32 = std.build.Pkg{
+        .name = "base32",
+        .path = std.build.FileSource.relative("base32/src/base32.zig"),
+    };
+    lib.addPackage(pkg_base32);
     lib.setBuildMode(mode);
     lib.install();
 
     const coverage = b.option(bool, "coverage", "Generate test coverage") orelse false;
 
     var main_tests = b.addTest("src/ulid.zig");
-    main_tests.addPackage(.{ .name = "base32", .path = "base32/src/base32.zig" });
+    main_tests.addPackage(.{ .name = "base32", .path = .{ .path = "base32/src/base32.zig" } });
     main_tests.setBuildMode(mode);
 
     if (coverage) {
